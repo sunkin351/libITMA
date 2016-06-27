@@ -1,7 +1,7 @@
 #include "ITMA.hpp"
 
 
-namespace MTMA
+namespace ITMA
 {
 	inline void lock(std::mutex & mtx)
 	{

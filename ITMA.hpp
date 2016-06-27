@@ -30,7 +30,9 @@
 #define EXPORT __declspec(dllimport)
 #endif //MTMA_EXPORT
 
-namespace MTMA
+/* TODO: Make EXPORT macro compatible with Unix compilers for dynamic link library creation. */
+
+namespace ITMA
 {
 	class pipe;
 
