@@ -5,8 +5,7 @@ namespace ITMA
 {
 	inline void lock(std::mutex & mtx)
 	{
-		while (!mtx.try_lock())
-			std::this_thread::sleep_for(std::chrono::milliseconds(2));
+		mtx.lock();
 	}
 
 	inline void unlock(std::mutex & mtx)
