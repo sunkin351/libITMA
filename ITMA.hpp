@@ -103,6 +103,12 @@ namespace ITMA
 			copy(const_cast<Message&>(msg));
 		}
 
+		~Message()
+		{
+			if(data) 
+				data.reset();
+		}
+
 		Message & operator=(Message&& source)
 		{
 			copy(source);
@@ -172,8 +178,8 @@ namespace ITMA
 		template<class T, int size = sizeof(T)>
 		void send(T & object, std::string signature, bool more = false)
 		{
-			T* pointer = new T(object);
-			send((void*)pointer, CustomObject, signature, more, size);
+			std::shared_ptr<T> pointer( new T(object) );
+			send(pointer, CustomObject, signature, more, size);
 		}
 
 		//Methods that convert from void* data
@@ -189,10 +195,6 @@ namespace ITMA
 		bool recieve(unsigned short& dest);
 		bool recieve(unsigned int& dest);
 		bool recieve(unsigned long& dest);
-
-		//void* message feature. Dont use unless you know what your doing.
-		void send(void* data, std::string signature, bool more = false);
-		void* recieve(); //returns a void* instead of a bool, but throws if the original message was not a void*.
 
 		template<class T, int size = sizeof(T)>
 		bool recieve(T & dest)
@@ -211,7 +213,7 @@ namespace ITMA
 
 	private:
 		//Methods that send/recieve messages
-		inline void send(void * data, char type, std::string signature, bool more = false, int size = 0);
+		inline void send(std::shared_ptr<void> data, char type, std::string signature, bool more = false, int size = 0);
 		inline bool recieve(Message & msg);
 
 		//Methods that control the mutex

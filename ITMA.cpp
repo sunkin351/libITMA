@@ -38,7 +38,10 @@ namespace ITMA
 		{
 			if (it == pip)
 			{
-				pipes.erase(pipes.begin() + i);
+				if (!(it.use_count() > 2))
+				{
+					pipes.erase(pipes.begin() + i);
+				}
 				pip.reset();
 				break;
 			}
@@ -185,67 +188,62 @@ namespace ITMA
 
 	void pipe::send(std::string dat, std::string sig, bool more)
 	{
-		std::string * data = new std::string(dat);
-		send((void*)data, string, sig, more);
+		std::shared_ptr<std::string> data(new std::string(dat));
+		send(data, string, sig, more);
 	}
 
 	void pipe::send(bool data, std::string sig, bool more)
 	{
-		bool * dat = new bool(data);
-		send((void*)dat, _bool, sig, more);
+		std::shared_ptr<bool> dat(new bool(data));
+		send(dat, _bool, sig, more);
 	}
 
 	void pipe::send(char data, std::string sig, bool more)
 	{
-		char* dat = new char(data);
-		send((void*)dat, _8bitS, sig, more);
+		std::shared_ptr<char> dat(new char(data));
+		send(dat, _8bitS, sig, more);
 	}
 
 	void pipe::send(short data, std::string sig, bool more)
 	{
-		short* dat = new short(data);
-		send((void*)dat, _16bitS, sig, more);
+		std::shared_ptr<short> dat(new short(data));
+		send(dat, _16bitS, sig, more);
 	}
 
 	void pipe::send(int data, std::string sig, bool more)
 	{
-		int * dat = new int(data);
-		send((void*)dat, _32bitS, sig, more);
+		std::shared_ptr<int> dat(new int(data));
+		send(dat, _32bitS, sig, more);
 	}
 
 	void pipe::send(long data, std::string sig, bool more)
 	{
-		long * dat = new long(data);
-		send((void*)dat, _64bitS, sig, more);
+		std::shared_ptr<long> dat(new long(data));
+		send(dat, _64bitS, sig, more);
 	}
 
 	void pipe::send(unsigned char data, std::string sig, bool more)
 	{
-		unsigned char* dat = new unsigned char(data);
-		send((void*)dat, _8bitU, sig, more);
+		std::shared_ptr<unsigned char> dat(new unsigned char(data));
+		send(dat, _8bitU, sig, more);
 	}
 
 	void pipe::send(unsigned short data, std::string sig, bool more)
 	{
-		unsigned short* dat = new unsigned short(data);
-		send((void*)dat, _16bitU, sig, more);
+		std::shared_ptr<unsigned short> dat(new unsigned short(data));
+		send(dat, _16bitU, sig, more);
 	}
 
 	void pipe::send(unsigned int data, std::string sig, bool more)
 	{
-		unsigned int* dat = new unsigned int(data);
-		send((void*)dat, _32bitU, sig, more);
+		std::shared_ptr<unsigned int> dat(new unsigned int(data));
+		send(dat, _32bitU, sig, more);
 	}
 
 	void pipe::send(unsigned long data, std::string sig, bool more)
 	{
-		unsigned long* dat = new unsigned long(data);
-		send((void*)dat, _64bitU, sig, more);
-	}
-
-	void pipe::send(void * data, std::string signature, bool more)
-	{
-		send(data, _voidptr, signature, more);
+		std::shared_ptr<unsigned long> dat(new unsigned long(data));
+		send(dat, _64bitU, sig, more);
 	}
 
 	bool pipe::recieve(std::string & str)
@@ -389,26 +387,10 @@ namespace ITMA
 		return rc;
 	}
 
-	void * pipe::recieve()
-	{
-		Message msg;
-		bool rc = recieve(msg);
-		if (rc) {
-			if (msg.type != _voidptr)
-			{
-				throw std::exception("Message data not of type unsigned long.");
-			}
-			return msg.data.get();
-		}
-		else {
-			return nullptr;
-		}
-	}
-
-	void pipe::send(void * data, char type, std::string sig, bool more, int size)
+	void pipe::send(std::shared_ptr<void> data, char type, std::string sig, bool more, int size)
 	{
 		Message buffer;
-		buffer.data.reset(data);
+		buffer.data = data;
 		buffer.type = type;
 		buffer.signature = sig;
 		buffer.more = more;
@@ -437,12 +419,12 @@ namespace ITMA
 
 	void pipe::lock()
 	{
-		::lock(mtx);
+		ITMA::lock(mtx);
 	}
 
 	void pipe::unlock()
 	{
-		::unlock(mtx);
+		ITMA::unlock(mtx);
 	}
 
 	void pipe::ctxpush(Message & msg)
@@ -459,5 +441,4 @@ namespace ITMA
 		out.pop();
 		unlock();
 	}
-
 }
