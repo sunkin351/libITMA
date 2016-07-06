@@ -1,19 +1,12 @@
-#include "ITMA.hpp"
+/*
+	This file is a part of the ITMA (Inter-Thread Messaging Achitecture) project under the MPLv2.0 or later license.
+	See file "LICENSE" or https://www.mozilla.org/en-US/MPL/2.0/ for details.
+*/
 
+#include "ITMA.hpp"
 
 namespace ITMA
 {
-	inline void lock(std::mutex & mtx)
-	{
-		mtx.lock();
-	}
-
-	inline void unlock(std::mutex & mtx)
-	{
-		mtx.unlock();
-	}
-
-
 	MContext::MContext()
 	{
 		context = std::thread(std::bind(&MContext::ThreadStart, this)); //Start Message Manager on context creation.
@@ -22,43 +15,42 @@ namespace ITMA
 
 	std::shared_ptr<pipe> MContext::CreatePipe(int chan)
 	{
-		lock(mtx);
+		lock.lock();
 		int ret = pipes.size();
 		pipes.push_back(std::make_shared<pipe>(pipe(chan)));
-		unlock(mtx);
+		lock.unlock();
 		return pipes[ret];
 	}
 
 	void MContext::DestroyPipe(std::shared_ptr<pipe> & pip)
 	{
-		int i = 0;
-		lock(mtx);
-		for (auto it : pipes)
+		lock.lock();
+		for (int i = 0; i != pipes.size(); i++)
 		{
-			if (it == pip)
+			std::shared_ptr<pipe> & ref = pipes[i];
+			if (ref == pip)
 			{
-				if (!(it.use_count() > 2))
+				if (!(ref.use_count() > 2))
 				{
-					pipes.erase(pipes.begin() + i);
+					pipes.remove(i);
 				}
 				pip.reset();
 				break;
 			}
-			i++;
 		}
-		unlock(mtx);
+		lock.unlock();
 	}
 
 	void MContext::ThreadStart()
 	{
 		while (true)
 		{
-			lock(mtx);
+			lock.lock();
 			if (pipes.size() != 0) //Check to see if there are pipes to process.
 			{
 				for (int a = 0; a != pipes.size(); ++a) //Primary loop looking in all pipes for messages that need moving.
 				{
-					if (!pipes[a]->out.empty()) //Check to see if there are messages to move.
+					if (!pipes[a]->out.is_empty()) //Check to see if there are messages to move.
 					{
 						Message msg; //buffer message
 						pipes[a]->ctxpop(msg);
@@ -99,7 +91,7 @@ namespace ITMA
 					}
 				}
 			}
-			unlock(mtx);
+			lock.unlock();
 			std::this_thread::sleep_for(std::chrono::milliseconds(1)); //To keep CPU usage down while still being responsive.
 		}
 	}
@@ -133,7 +125,7 @@ namespace ITMA
 	{
 		if (pip)
 		{
-			while (!pip->out.empty())
+			while (!pip->out.is_empty())
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 			}
@@ -143,7 +135,7 @@ namespace ITMA
 
 	bool Channel::poll()
 	{
-		return !pip->in.empty();
+		return !pip->in.is_empty();
 	}
 
 	void Channel::subscribe(std::string sub)
@@ -175,14 +167,26 @@ namespace ITMA
 		subscription = tocopy.subscription;
 	}
 
+	pipe::pipe(pipe && src)
+	{
+		*this = std::move(src);
+	}
+
 	pipe::~pipe()
 	{
-		while (!in.empty())
-			in.pop();
-		while (!out.empty())
-			out.pop();
+		if (!in.is_empty())
+			in.clear();
+		if (!out.is_empty())
+			out.clear();
 
 		subscription.clear();
+	}
+
+	void pipe::operator=(pipe && src)
+	{
+		in = std::move(src.in);
+		out = std::move(src.out);
+		subscription = std::move(src.subscription);
 	}
 
 	void pipe::send(std::string dat, std::string sig, bool more)
@@ -395,19 +399,18 @@ namespace ITMA
 		buffer.more = more;
 		buffer.size = size;
 
-		lock();
+		lock.lock();
 		out.push(buffer);
-		unlock();
+		lock.unlock();
 	}
 
 	bool pipe::recieve(Message & msg)
 	{
-		if (!in.empty())
+		if (!in.is_empty())
 		{
-			lock();
-			msg = in.front();
-			in.pop();
-			unlock();
+			lock.lock();
+			in.pop(msg);
+			lock.unlock();
 			return true;
 		}
 		else
@@ -416,28 +419,17 @@ namespace ITMA
 		}
 	}
 
-	void pipe::lock()
-	{
-		ITMA::lock(mtx);
-	}
-
-	void pipe::unlock()
-	{
-		ITMA::unlock(mtx);
-	}
-
 	void pipe::ctxpush(Message & msg)
 	{
-		lock();
+		lock.lock();
 		in.push(msg);
-		unlock();
+		lock.unlock();
 	}
 
 	void pipe::ctxpop(Message & msg)
 	{
-		lock();
-		msg = out.front();
-		out.pop();
-		unlock();
+		lock.lock();
+		out.pop(msg);
+		lock.unlock();
 	}
 }

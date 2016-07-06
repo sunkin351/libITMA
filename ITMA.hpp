@@ -1,36 +1,31 @@
 /*
-*
-*
-*
-*
-*
-*
-*
-*
-*
+	This file is a part of the ITMA (Inter-Thread Messaging Achitecture) project under the MPLv2.0 or later license.
+	See file "LICENSE" or https://www.mozilla.org/en-US/MPL/2.0/ for details.
 */
 
 #pragma once
 
-#ifndef MTMA_HPP
-#define MTMA_HPP
+#ifndef ITMA_HPP
+#define ITMA_HPP
 
 #include <thread>
 #include <string>
-#include <deque>
 #include <queue>
 #include <memory>
 #include <mutex>
 
 //Windows dll EXPORT definition
 //TODO: add Cross-platform dynamic library macros
-#ifdef MTMA_EXPORT
+#ifdef ITMA_EXPORT
 #define EXPORT __declspec(dllexport)
 #else
 #define EXPORT __declspec(dllimport)
 #endif //MTMA_EXPORT
 
 /* TODO: Make EXPORT macro compatible with Unix compilers for dynamic link library creation. */
+
+#include "Custom_Vector.h"
+#include "Custom_Queue.h"
 
 namespace ITMA
 {
@@ -39,8 +34,8 @@ namespace ITMA
 	class EXPORT MContext
 	{
 		std::thread context;
-		std::deque<std::shared_ptr<pipe>> pipes;
-		std::mutex mtx;
+		custom_vector<std::shared_ptr<pipe>> pipes;
+		std::mutex lock;
 	public:
 		MContext();
 		std::shared_ptr<pipe> CreatePipe(int chan);
@@ -70,17 +65,17 @@ namespace ITMA
 		}
 
 		template<typename T>
-		void recieve(T & object)
+		void recieve(T & object) 
 		{
-			while (pip->in.empty())
+			while (pip->in.is_empty())
 				std::this_thread::sleep_for(std::chrono::milliseconds(2)); //blocking read
 			pip->recieve(object);
 		}
 
 		bool poll();
 
-		void subscribe(std::string sub);
-		void unsubscribe(std::string sub);
+		void subscribe(std::string sub) ;
+		void unsubscribe(std::string sub) ;
 	};
 
 	struct Message
@@ -92,6 +87,11 @@ namespace ITMA
 		int size;
 
 		Message() {}
+
+		Message(Message && msg)
+		{
+			*this = std::move(msg);
+		}
 
 		Message(Message& msg)
 		{
@@ -111,7 +111,12 @@ namespace ITMA
 
 		Message & operator=(Message&& source)
 		{
-			copy(source);
+			signature = source.signature;
+			data = source.data;
+			type = source.type;
+			more = source.more;
+			size = source.size;
+			source.clear();
 			return *this;
 		}
 		Message & operator=(Message& source)
@@ -120,7 +125,7 @@ namespace ITMA
 			return *this;
 		}
 
-		void copy(Message& source)
+		inline void copy(Message& source)
 		{
 			signature = source.signature;
 			data = source.data;
@@ -128,15 +133,24 @@ namespace ITMA
 			more = source.more;
 			size = source.size;
 		}
+
+		void clear()
+		{
+			signature = "";
+			data.reset();
+			type = 0;
+			more = 0;
+			size = 0;
+		}
 	};
 
 	class EXPORT pipe
 	{
-		std::queue<Message> in; //incoming messages
-		std::queue<Message> out; //outgoing messages
+		custom_queue<Message> in; //incoming messages
+		custom_queue<Message> out; //outgoing messages
 		std::vector<std::string> subscription; //list of subscriptions for a pipe
 		int channel; //channel for a pipe
-		std::mutex mtx; //Mutex for synchronous access to the queues.
+		std::mutex lock; //Mutex for synchronous access to the queues.
 		enum //Message type specifiers
 		{
 			string,
@@ -154,11 +168,14 @@ namespace ITMA
 		};
 	public:
 		//constructors
-		pipe(int _channel = 0);
+		pipe(int _channel);
 		pipe(const pipe& tocopy);
+		pipe(pipe&& src);
 
 		//destructor
 		~pipe();
+
+		void operator=(pipe&& src);
 
 		//Methods that convert to void* data
 		void send(std::string data, std::string signature, bool more = false);
@@ -216,10 +233,6 @@ namespace ITMA
 		inline void send(std::shared_ptr<void> data, char type, std::string signature, bool more = false, int size = 0);
 		inline bool recieve(Message & msg);
 
-		//Methods that control the mutex
-		void lock();
-		void unlock();
-
 		//Methods that are used in the Message Managing context
 		void ctxpush(Message & msg);
 		void ctxpop(Message & msg);
@@ -231,4 +244,4 @@ namespace ITMA
 	
 }//namespace MTMA
 
-#endif //MTMA_HPP
+#endif //ITMA_HPP
