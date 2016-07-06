@@ -16,28 +16,28 @@
 namespace ITMA
 {
 	template<class T>
-	void move(T * dest, T * src, int dest_start, int src_start, int count)
+	void move(T * Dest, T * Src, int DestStartingElement, int SrcStartingElement, int count)
 	{
-		register int dsp = dest_start;
-		register int ssp = src_start;
+		register int dsp = DestStartingElement;
+		register int ssp = SrcStartingElement;
 		for (int i = 0; i != count; ++i)
 		{
-			dest[dsp] = std::move(src[ssp]);
+			Dest[dsp] = std::move(Src[ssp]);
 			++dsp;
 			++ssp;
 		}
 	}
 
-	template<class T, int objsize = sizeof(T)>
-	class custom_vector
+	template<class T, int ObjectSize = sizeof(T)>
+	class CustomVector
 	{
 		T* array = 0;
-		int ObjNum = 0;
-		int CurrMax = 0;
+		int size = 0;
+		int ArraySize = 0;
 	public:
-		custom_vector() {}
+		CustomVector() {}
 
-		~custom_vector() { clear(); }
+		~CustomVector() { clear(); }
 
 		void push_back(T& obj);
 		void push_back(T&& src);
@@ -45,16 +45,16 @@ namespace ITMA
 		void remove(unsigned int elem);
 		T & operator[](unsigned int ElemNum);
 
-		int size() { return ObjNum; } //Returns number of objects in storage
-		bool is_empty() { return (ObjNum == 0); };
-		int Max() { return CurrMax; } //Returns max currently allocated
+		int size() { return size; } //Returns number of objects in storage
+		bool is_empty() { return (size == 0); };
+		int Max() { return ArraySize; } //Returns max currently allocated
 
 		void clear()
 		{
 			delete[] array;
 			array = 0;
-			ObjNum = 0;
-			CurrMax = 0;
+			size = 0;
+			ArraySize = 0;
 		}
 
 		void reserve(int size);
@@ -68,57 +68,57 @@ namespace ITMA
 		//and that this function will not iterate over the edge of the source array.
 	};
 
-	template<class T, int objsize = sizeof(T)>
-	void custom_vector<T, objsize>::push_back(T& obj)
+	template<class T, int ObjectSize>
+	void CustomVector<T, ObjectSize>::push_back(T& obj)
 	{
-		if (ObjNum == CurrMax)
+		if (size == ArraySize)
 		{
-			realloc(CurrMax + (5 - (CurrMax % 5)));
+			realloc(ArraySize + (5 - (ArraySize % 5)));
 		}
 
-		array[ObjNum] = obj;
-		++ObjNum;
+		array[size] = obj;
+		++size;
 	}
 
-	template<class T, int objsize = sizeof(T)>
-	void custom_vector<T, objsize>::push_back(T&& src)
+	template<class T, int ObjectSize>
+	void CustomVector<T, ObjectSize>::push_back(T&& src)
 	{
-		if (ObjNum == CurrMax)
+		if (size == ArraySize)
 		{
-			realloc(CurrMax + (5 - (CurrMax % 5)));
+			realloc(ArraySize + (5 - (ArraySize % 5)));
 		}
 
-		array[ObjNum] = std::move(src);
-		++ObjNum;
+		array[size] = std::move(src);
+		++size;
 	}
 
-	template<class T, int objsize = sizeof(T)>
-	void custom_vector<T, objsize>::pop_back()
+	template<class T, int ObjectSize>
+	void CustomVector<T, ObjectSize>::pop_back()
 	{
-		if (ObjNum == 0)
+		if (size == 0)
 		{
 			throw std::exception("No Elements exception");
 		}
-		--ObjNum;
-		array[ObjNum] = T();
+		--size;
+		array[size] = T();
 	}
 
-	template<class T, int objsize = sizeof(T)>
-	void custom_vector<T, objsize>::remove(unsigned int elem)
+	template<class T, int ObjectSize>
+	void CustomVector<T, ObjectSize>::remove(unsigned int elem)
 	{
-		if (elem >= ObjNum)
+		if (elem >= size)
 		{
 			throw std::exception("Out of Bounds exception");
 		}
 
-		T* bufptr = allocate(CurrMax);
+		T* bufptr = allocate(ArraySize);
 
-		if (elem != ObjNum - 1 && elem != 0)
+		if (elem != size - 1 && elem != 0)
 		{
 			register int temp1 = elem + 1;
 
 			move(bufptr, array, 0, 0, elem);
-			move(bufptr, array, elem, temp1, ObjNum - temp1);
+			move(bufptr, array, elem, temp1, size - temp1);
 
 			delete[] array;
 			array = bufptr;
@@ -129,10 +129,10 @@ namespace ITMA
 		}
 	}
 
-	template<class T, int objsize = sizeof(T)>
-	T& custom_vector<T, objsize>::operator[](unsigned int ElemNum)
+	template<class T, int ObjectSize>
+	T& CustomVector<T, ObjectSize>::operator[](unsigned int ElemNum)
 	{
-		if (ElemNum >= ObjNum)
+		if (ElemNum >= size)
 		{
 			throw std::exception("Out of Bounds Exception");
 		}
@@ -147,24 +147,24 @@ namespace ITMA
 		return *obj;
 	}
 
-	template<class T, int objsize = sizeof(T)>
-	void custom_vector<T, objsize>::reserve(int size)
+	template<class T, int ObjectSize>
+	void CustomVector<T, ObjectSize>::reserve(int size)
 	{
-		register int temp = CurrMax - ObjNum;
+		register int temp = ArraySize - size;
 		if (size > temp)
 		{
-			realloc(CurrMax + size);
+			realloc(ArraySize + size);
 		}
 	}
 
-	template<class T, int objsize = sizeof(T)>
-	void custom_vector<T, objsize>::shrink_to_fit()
+	template<class T, int ObjectSize>
+	void CustomVector<T, ObjectSize>::shrink_to_fit()
 	{
-		realloc(ObjNum);
+		realloc(size);
 	}
 
-	template<class T, int objsize = sizeof(T)>
-	void custom_vector<T, objsize>::realloc(int size)
+	template<class T, int ObjectSize>
+	void CustomVector<T, ObjectSize>::realloc(int size)
 	{
 		if (!array)
 		{
@@ -172,21 +172,21 @@ namespace ITMA
 		}
 		else {
 			T* buf = new T[size];
-			if (size < CurrMax)
+			if (size < ArraySize)
 			{
 				move(buf, array, 0, 0, size);
 			}
 			else {
-				move(buf, array, 0, 0, CurrMax);
+				move(buf, array, 0, 0, ArraySize);
 			}
 			delete[] array;
 			array = buf;
 		}
-		CurrMax = size;
+		ArraySize = size;
 	}
 
-	template<class T, int objsize>
-	inline T * custom_vector<T, objsize>::allocate(int size)
+	template<class T, int ObjectSize>
+	inline T * CustomVector<T, ObjectSize>::allocate(int size)
 	{
 		return new T[size];
 	}

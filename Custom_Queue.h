@@ -17,37 +17,37 @@ namespace ITMA
 {
 
 	template<class T>
-	struct queue_object
+	struct QueueObject
 	{
-		queue_object<T> * nextObj = nullptr;
+		QueueObject<T> * nextObj = nullptr;
 		T _object;
 	};
 
-	template<class T, class obj = queue_object<T>>
-	class custom_queue
+	template<class T, class obj = QueueObject<T>>
+	class CustomQueue
 	{
 		obj* FirstElement;
 		obj* LastElement;
-		int queueSize = 0;
+		int size = 0;
 	public:
-		custom_queue()
+		CustomQueue()
 		{
 			FirstElement = nullptr;
 			LastElement = nullptr;
 		}
 
-		custom_queue(custom_queue<T> && src)
+		CustomQueue(CustomQueue<T> && src)
 		{
 			*this = std::move(src);
 		}
 
-		~custom_queue()
+		~CustomQueue()
 		{
 			clear();
 		}
 
-		bool is_empty() { return (queueSize == 0); }
-		int size() { return queueSize; }
+		bool is_empty() { return (size == 0); }
+		int size() { return size; }
 
 		void push(T& src)
 		{
@@ -63,7 +63,7 @@ namespace ITMA
 				LastElement->nextObj = bufptr;
 				LastElement = bufptr;
 			}
-			++queueSize;
+			++size;
 		}
 
 		void push(T&& src)
@@ -80,7 +80,7 @@ namespace ITMA
 				LastElement->nextObj = bufptr;
 				LastElement = bufptr;
 			}
-			++queueSize;
+			++size;
 		}
 
 		void push_noCopy(T& src)
@@ -108,7 +108,7 @@ namespace ITMA
 				FirstElement = nullptr;
 				LastElement = nullptr;
 			}
-			--queueSize;
+			--size;
 		}
 
 		void clear()
@@ -129,24 +129,24 @@ namespace ITMA
 			FirstElement = nullptr;
 			LastElement = nullptr;
 
-			queueSize = 0;
+			size = 0;
 		}
 
-		void operator=(custom_queue<T> && src)
+		void operator=(CustomQueue<T> && src)
 		{
 			clear();
 
 			FirstElement = src.FirstElement;
 			LastElement = src.LastElement;
-			queueSize = src.queueSize;
+			size = src.size;
 
 			src.FirstElement = 0;
 			src.LastElement = 0;
-			src.queueSize = 0;
+			src.size = 0;
 		}
 	private:
-		custom_queue<T>& operator=(custom_queue<T> & src) = delete;
-		custom_queue(custom_queue<T> & src) = delete;
+		CustomQueue<T>& operator=(CustomQueue<T> & src) = delete;
+		CustomQueue(CustomQueue<T> & src) = delete;
 	};
 
 }

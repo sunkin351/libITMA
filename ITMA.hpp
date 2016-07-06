@@ -24,8 +24,8 @@
 
 /* TODO: Make EXPORT macro compatible with Unix compilers for dynamic link library creation. */
 
-#include "Custom_Vector.h"
-#include "Custom_Queue.h"
+#include "custom_vector.h"
+#include "custom_queue.h"
 
 namespace ITMA
 {
@@ -34,7 +34,7 @@ namespace ITMA
 	class EXPORT MContext
 	{
 		std::thread context;
-		custom_vector<std::shared_ptr<pipe>> pipes;
+		CustomVector<std::shared_ptr<pipe>> pipes;
 		std::mutex lock;
 	public:
 		MContext();
@@ -146,8 +146,8 @@ namespace ITMA
 
 	class EXPORT pipe
 	{
-		custom_queue<Message> in; //incoming messages
-		custom_queue<Message> out; //outgoing messages
+		CustomQueue<Message> in; //incoming messages
+		CustomQueue<Message> out; //outgoing messages
 		std::vector<std::string> subscription; //list of subscriptions for a pipe
 		int channel; //channel for a pipe
 		std::mutex lock; //Mutex for synchronous access to the queues.

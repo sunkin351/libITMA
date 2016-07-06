@@ -3,7 +3,7 @@
 	See file "LICENSE" or https://www.mozilla.org/en-US/MPL/2.0/ for details.
 */
 
-#include "ITMA.hpp"
+#include "itma.hpp"
 
 namespace ITMA
 {
