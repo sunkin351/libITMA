@@ -1,3 +1,7 @@
+C:\Programming\C++\libITMA\build\msvc\vs2015\Debug
+C:\Programming\C++\libITMA\build\msvc\vs2015\x64
+C:\Programming\C++\libITMA\build\msvc\vs2015\test_speed\x64
+
 # Compiled Object files
 *.slo
 *.lo
@@ -27,3 +31,8 @@
 *.exe
 *.out
 *.app
+
+*.ilk
+*.pdb
+*.idb
+*.exp
