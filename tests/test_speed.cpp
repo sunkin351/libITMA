@@ -49,6 +49,8 @@ int main()
 	std::thread testThread(std::bind(&secondThread, &context));
 	testThread.detach();
 
+	std::cout << "Starting Test.\n";
+
 	timepoint start = time_now();
 
 	{
@@ -56,6 +58,7 @@ int main()
 		for (int i = 0; i != 500; ++i)
 		{
 			channel.recieve(temp);
+			std::cout << "Message " << (i + 1) << " Recieved.\n";
 		}
 	}
 	timepoint end = time_now();

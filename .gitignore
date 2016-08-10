@@ -1,6 +1,6 @@
-C:\Programming\C++\libITMA\build\msvc\vs2015\Debug
-C:\Programming\C++\libITMA\build\msvc\vs2015\x64
-C:\Programming\C++\libITMA\build\msvc\vs2015\test_speed\x64
+**/build/msvc/vs2015/Debug
+**/build/msvc/vs2015/x64
+**/build/msvc/vs2015/test_speed/x64
 
 # Compiled Object files
 *.slo
@@ -36,3 +36,5 @@ C:\Programming\C++\libITMA\build\msvc\vs2015\test_speed\x64
 *.pdb
 *.idb
 *.exp
+*.opensdf
+*.suo

@@ -60,7 +60,8 @@ namespace ITMA
 						{
 							if (a != b) //Skips sender pipe
 							{
-								if (pipes[b]->channel == channel)
+								volatile int temp = pipes[b]->channel;
+								if (temp == channel)
 								{
 									if (msg.signature == "") // If message signature is blank, message will be given to everyone on the same channel as the sender
 									{
