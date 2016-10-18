@@ -12,14 +12,15 @@
 
 #include <exception>
 #include <memory>
+#include <cstdint>
 
 namespace ITMA
 {
-	template<class T> //Warning: Do not use if you dont know what you are doing.
+	template<class T> //Warning: Do not use if you don't know what you are doing.
 	void move(T * Dest, T * Src, size_t DestStartingElement, size_t SrcStartingElement, size_t count) 
 	{
-		register unsigned long long dsp = DestStartingElement;
-		register unsigned long long ssp = SrcStartingElement;
+		uint64_t dsp = DestStartingElement;
+		uint64_t ssp = SrcStartingElement;
 		for (int i = 0; i != count; ++i)
 		{
 			Dest[dsp] = std::move(Src[ssp]);

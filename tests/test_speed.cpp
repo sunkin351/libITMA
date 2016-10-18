@@ -1,8 +1,8 @@
-#include "..\src\ITMA.hpp"
-
 #include <thread>
 #include <chrono>
 #include <iostream>
+
+#include "../src/itma.h"
 
 #define timepoint std::chrono::steady_clock::time_point
 #define time_now() std::chrono::steady_clock::now()

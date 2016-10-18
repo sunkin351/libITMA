@@ -38,3 +38,7 @@
 *.exp
 *.opensdf
 *.suo
+
+.settings
+.project
+.cproject
